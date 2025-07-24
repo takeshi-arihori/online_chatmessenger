@@ -1,0 +1,5 @@
+branch="$(git symbolic-ref --short HEAD)"
+if [ "$branch" = "main" ]; then
+  echo "🚫 mainブランチへの直接pushは禁止されています。PR経由でマージしてください。"
+  exit 1
+fi 

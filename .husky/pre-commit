@@ -1,0 +1,13 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# PHP Code Style Check & Auto-fix (run in src)
+echo "📝 Checking and fixing PHP code style (PSR-12)..."
+if ! (composer format:fix); then
+    echo "❌ PHP code style fix failed."
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

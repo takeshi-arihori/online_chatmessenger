@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 プロジェクト仕様
+    url: https://github.com/[username]/[repository]/blob/main/CLAUDE.md
+    about: プロジェクトの全体仕様とアーキテクチャに関する情報
+  - name: 🚀 開発環境セットアップ
+    url: https://github.com/[username]/[repository]/blob/main/README.md
+    about: 開発環境のセットアップ手順とクイックスタートガイド
