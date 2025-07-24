@@ -28,9 +28,14 @@
         "test": "phpunit",
         "test:unit": "phpunit tests/Unit",
         "test:integration": "phpunit tests/Integration",
+        "test:performance": "phpunit tests/Integration/UdpProtocolPerformanceTest.php",
         "cs:check": "phpcs --standard=PSR12 src/ tests/",
         "cs:fix": "phpcbf --standard=PSR12 src/ tests/",
-        "analyse": "phpstan analyse src/ --level=8"
+        "analyse": "phpstan analyse src/ --level=8",
+        "server:udp": "php bin/udp-server",
+        "server:udp:dev": "php bin/udp-server --port=8080",
+        "client:cli": "php bin/cli-client",
+        "client:cli:dev": "php bin/cli-client --server=localhost --port=8080"
     },
     "config": {
         "optimize-autoloader": true,
