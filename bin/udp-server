@@ -1,0 +1,56 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use ChatMessenger\Server\UdpServer;
+use ChatMessenger\Common\Utils\Config;
+
+// Parse command line arguments
+$options = getopt('p:h', ['port:', 'help']);
+
+if (isset($options['h']) || isset($options['help'])) {
+    echo "Usage: php bin/udp-server [OPTIONS]\n";
+    echo "Options:\n";
+    echo "  -p, --port=PORT    Port to bind server (default: 8080)\n";
+    echo "  -h, --help         Show this help message\n";
+    exit(0);
+}
+
+// Get port from command line or use default
+$port = null;
+if (isset($options['p'])) {
+    $port = (int) $options['p'];
+} elseif (isset($options['port'])) {
+    $port = (int) $options['port'];
+}
+
+// Create config
+$config = new Config($port ? ['udp_port' => $port] : []);
+
+// Create and start server
+$server = new UdpServer($config);
+
+// Handle shutdown signals
+if (function_exists('pcntl_signal')) {
+    pcntl_signal(SIGTERM, function () use ($server) {
+        echo "\nReceived SIGTERM, shutting down...\n";
+        $server->stop();
+        exit(0);
+    });
+
+    pcntl_signal(SIGINT, function () use ($server) {
+        echo "\nReceived SIGINT, shutting down...\n";
+        $server->stop();
+        exit(0);
+    });
+}
+
+try {
+    $server->start();
+} catch (Exception $e) {
+    echo "Server error: {$e->getMessage()}\n";
+    exit(1);
+}

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ChatMessenger\Client\Exception;
 
-use ChatMessenger\Common\Exception\ChatMessengerException;
+use Exception;
 
-class ClientException extends ChatMessengerException
+class ClientException extends Exception
 {
 }

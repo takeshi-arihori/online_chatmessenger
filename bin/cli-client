@@ -1,0 +1,126 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use ChatMessenger\Client\CliClient;
+use ChatMessenger\Client\Exception\ClientException;
+use ChatMessenger\Common\Utils\Config;
+
+function showHelp(): void
+{
+    echo "Chat Messenger CLI Client\n\n";
+    echo "Usage: php bin/cli-client [OPTIONS]\n\n";
+    echo "Options:\n";
+    echo "  -s, --server=HOST      Server hostname (default: localhost)\n";
+    echo "  -p, --port=PORT        Server port (default: 8080)\n";
+    echo "  -u, --username=USER    Username for chat (required)\n";
+    echo "  --verbose              Enable verbose output\n";
+    echo "  -h, --help             Show this help message\n\n";
+    echo "Examples:\n";
+    echo "  php bin/cli-client -u Alice\n";
+    echo "  php bin/cli-client -u Bob -s 192.168.1.100 -p 8081\n";
+    echo "  php bin/cli-client --username=Charlie --server=localhost --port=8080 --verbose\n\n";
+}
+
+function parseArguments(): array
+{
+    $options = getopt('s:p:u:hv', ['server:', 'port:', 'username:', 'help', 'verbose']);
+    
+    if (isset($options['h']) || isset($options['help'])) {
+        showHelp();
+        exit(0);
+    }
+    
+    $server = $options['s'] ?? $options['server'] ?? 'localhost';
+    $port = (int)($options['p'] ?? $options['port'] ?? 8080);
+    $username = $options['u'] ?? $options['username'] ?? null;
+    $verbose = isset($options['v']) || isset($options['verbose']);
+    
+    if (empty($username)) {
+        echo "Error: Username is required. Use -u or --username option.\n\n";
+        showHelp();
+        exit(1);
+    }
+    
+    if ($port < 1 || $port > 65535) {
+        echo "Error: Port must be between 1 and 65535.\n";
+        exit(1);
+    }
+    
+    return [
+        'server' => $server,
+        'port' => $port,
+        'username' => $username,
+        'verbose' => $verbose
+    ];
+}
+
+function validateEnvironment(): void
+{
+    // Check for required PHP extensions
+    $requiredExtensions = ['sockets', 'pcntl'];
+    $missingExtensions = [];
+    
+    foreach ($requiredExtensions as $ext) {
+        if (!extension_loaded($ext)) {
+            $missingExtensions[] = $ext;
+        }
+    }
+    
+    if (!empty($missingExtensions)) {
+        echo "Error: Missing required PHP extensions: " . implode(', ', $missingExtensions) . "\n";
+        echo "Please install the missing extensions and try again.\n";
+        exit(1);
+    }
+}
+
+function main(): void
+{
+    try {
+        validateEnvironment();
+        $args = parseArguments();
+        
+        echo "Starting Chat Messenger CLI Client...\n";
+        
+        if ($args['verbose']) {
+            echo "Server: {$args['server']}:{$args['port']}\n";
+            echo "Username: {$args['username']}\n";
+        }
+        
+        // Create configuration
+        $config = new Config([
+            'udp_port' => $args['port'],
+            'max_message_size' => 4096
+        ]);
+        
+        // Create and start client
+        $client = new CliClient($args['username'], $config, $args['verbose']);
+        
+        // Connect to server
+        echo "Connecting to {$args['server']}:{$args['port']}...\n";
+        $client->connect($args['server'], $args['port']);
+        
+        // Start interactive session
+        $client->start();
+        
+    } catch (ClientException $e) {
+        echo "Client Error: {$e->getMessage()}\n";
+        exit(1);
+    } catch (Exception $e) {
+        echo "Error: {$e->getMessage()}\n";
+        exit(1);
+    }
+}
+
+// Handle script interruption gracefully
+if (function_exists('pcntl_signal')) {
+    pcntl_signal(SIGINT, function() {
+        echo "\nShutting down...\n";
+        exit(0);
+    });
+}
+
+main();
